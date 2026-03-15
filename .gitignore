@@ -1,0 +1,33 @@
+# JS
+node_modules/
+.DS_Store
+*.log
+npm-debug.log*
+
+# Android build outputs (never commit these)
+android/app/build/
+android/.gradle/
+android/local.properties
+
+# Keystore (keep debug.keystore but not release)
+*.keystore
+!android/app/debug.keystore
+
+# iOS
+ios/build/
+ios/Pods/
+ios/DerivedData/
+
+# Buck
+.buckversion
+.buckconfig
+buck-out/
+
+# Environment
+.env
+.env.local
+
+# Editor
+.vscode/
+.idea/
+*.iml

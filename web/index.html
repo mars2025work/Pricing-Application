@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Odoo Pricing Studio — Mobile App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --primary:       #714B67;
+      --primary-light: #9a7090;
+      --primary-dark:  #3d2240;
+      --teal:          #017E84;
+      --teal-light:    #2da8ae;
+      --teal-dark:     #015a5e;
+      --bg:            #0d0a0e;
+      --bg2:           #130f15;
+      --surface:       rgba(255,255,255,0.04);
+      --border:        rgba(255,255,255,0.08);
+      --text:          #f5f0f4;
+      --muted:         rgba(255,255,255,0.45);
+      --accent:        #c084fc;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Noise texture overlay ───────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Gradient orbs ───────────────────────────────────── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb-1 { width: 600px; height: 600px; background: rgba(113,75,103,0.25); top: -200px; left: -200px; }
+    .orb-2 { width: 500px; height: 500px; background: rgba(1,126,132,0.18); bottom: -100px; right: -100px; }
+    .orb-3 { width: 300px; height: 300px; background: rgba(192,132,252,0.1); top: 40%; left: 50%; transform: translate(-50%,-50%); }
+
+    /* ── Layout ──────────────────────────────────────────── */
+    .wrap { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── Nav ─────────────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+      background: rgba(13,10,14,0.7);
+    }
+    .nav-inner {
+      max-width: 1000px; margin: 0 auto; padding: 0 24px;
+      height: 64px; display: flex; align-items: center; gap: 16px;
+    }
+    .nav-logo {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--teal));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .nav-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 15px; color: var(--text);
+      letter-spacing: -0.3px;
+    }
+    .nav-title span { color: var(--teal-light); }
+    .nav-badge {
+      margin-left: auto;
+      font-size: 11px; font-weight: 600;
+      background: rgba(1,126,132,0.15);
+      color: var(--teal-light);
+      border: 1px solid rgba(1,126,132,0.3);
+      padding: 4px 12px; border-radius: 50px;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── Hero ────────────────────────────────────────────── */
+    .hero { padding: 100px 0 80px; text-align: center; }
+
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 600; letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--teal-light);
+      background: rgba(1,126,132,0.1);
+      border: 1px solid rgba(1,126,132,0.25);
+      padding: 6px 16px; border-radius: 50px;
+      margin-bottom: 32px;
+      animation: fadeUp 0.6s ease both;
+    }
+    .live-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 6px #4ade80;
+      animation: pulse 2s ease infinite;
+    }
+
+    .hero-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(44px, 7vw, 80px);
+      font-weight: 800;
+      line-height: 1.0;
+      letter-spacing: -2px;
+      margin-bottom: 24px;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+    .hero-title .line2 {
+      background: linear-gradient(90deg, var(--primary-light), var(--teal-light), var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 18px; font-weight: 400; color: var(--muted);
+      max-width: 520px; margin: 0 auto 48px; line-height: 1.7;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    /* ── Download Button ─────────────────────────────────── */
+    .btn-group {
+      display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 16px 32px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--teal));
+      color: #fff; font-family: 'Syne', sans-serif;
+      font-size: 15px; font-weight: 700;
+      text-decoration: none; letter-spacing: -0.2px;
+      box-shadow: 0 8px 32px rgba(113,75,103,0.4), 0 2px 8px rgba(1,126,132,0.3);
+      transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .btn-primary::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent);
+      border-radius: inherit;
+    }
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 48px rgba(113,75,103,0.5), 0 4px 16px rgba(1,126,132,0.4);
+      filter: brightness(1.08);
+    }
+    .btn-primary:active { transform: translateY(-1px); }
+
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 16px 28px; border-radius: 14px;
+      background: var(--surface);
+      color: var(--text); font-family: 'Syne', sans-serif;
+      font-size: 15px; font-weight: 600;
+      text-decoration: none; letter-spacing: -0.2px;
+      border: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      transition: transform 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.07);
+    }
+
+    .btn-icon { font-size: 20px; }
+
+    /* ── Stats bar ───────────────────────────────────────── */
+    .stats {
+      display: flex; justify-content: center; gap: 0;
+      margin: 70px 0 0;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+      animation: fadeUp 0.6s 0.4s ease both;
+    }
+    .stat {
+      flex: 1; padding: 24px 20px; text-align: center;
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      transition: background 0.2s;
+    }
+    .stat:last-child { border-right: none; }
+    .stat:hover { background: rgba(255,255,255,0.07); }
+    .stat-val {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px; font-weight: 800;
+      background: linear-gradient(135deg, var(--primary-light), var(--teal-light));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -1px;
+    }
+    .stat-lbl { font-size: 12px; color: var(--muted); margin-top: 4px; font-weight: 500; }
+
+    /* ── Features grid ───────────────────────────────────── */
+    .section { padding: 80px 0; }
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 800; letter-spacing: -1px;
+      margin-bottom: 12px;
+    }
+    .section-sub { font-size: 16px; color: var(--muted); margin-bottom: 48px; }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px;
+      backdrop-filter: blur(12px);
+      transition: border-color 0.2s, transform 0.2s, background 0.2s;
+      opacity: 0; transform: translateY(20px);
+    }
+    .feature-card.visible {
+      animation: fadeUp 0.5s ease forwards;
+    }
+    .feature-card:hover {
+      border-color: rgba(113,75,103,0.4);
+      background: rgba(113,75,103,0.06);
+      transform: translateY(-2px);
+    }
+    .feature-icon {
+      font-size: 32px; margin-bottom: 16px; display: block;
+    }
+    .feature-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 17px; font-weight: 700;
+      margin-bottom: 8px; letter-spacing: -0.3px;
+    }
+    .feature-desc { font-size: 14px; color: var(--muted); line-height: 1.65; }
+
+    /* ── How to install ──────────────────────────────────── */
+    .steps { display: flex; flex-direction: column; gap: 16px; }
+    .step {
+      display: flex; gap: 20px; align-items: flex-start;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px; padding: 24px;
+      backdrop-filter: blur(8px);
+      transition: border-color 0.2s;
+    }
+    .step:hover { border-color: rgba(1,126,132,0.35); }
+    .step-num {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--teal));
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-weight: 800;
+      font-size: 15px; flex-shrink: 0;
+    }
+    .step-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px; font-weight: 700; margin-bottom: 6px;
+    }
+    .step-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
+    .step-tag {
+      display: inline-block; margin-top: 8px;
+      font-size: 11px; font-weight: 600;
+      background: rgba(1,126,132,0.12); color: var(--teal-light);
+      border: 1px solid rgba(1,126,132,0.25);
+      padding: 3px 10px; border-radius: 50px;
+    }
+
+    /* ── Download CTA section ────────────────────────────── */
+    .cta {
+      text-align: center; padding: 80px 0 100px;
+    }
+    .cta-card {
+      background: linear-gradient(135deg, rgba(113,75,103,0.15), rgba(1,126,132,0.12));
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 24px; padding: 60px 40px;
+      backdrop-filter: blur(20px);
+      position: relative; overflow: hidden;
+    }
+    .cta-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 30% 50%, rgba(113,75,103,0.15), transparent 60%),
+                  radial-gradient(circle at 70% 50%, rgba(1,126,132,0.12), transparent 60%);
+      pointer-events: none;
+    }
+    .cta-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 800; letter-spacing: -1px;
+      margin-bottom: 16px; position: relative;
+    }
+    .cta-sub {
+      font-size: 16px; color: var(--muted);
+      margin-bottom: 40px; position: relative;
+    }
+
+    /* ── Version badge ───────────────────────────────────── */
+    .version-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--muted);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      padding: 6px 14px; border-radius: 50px;
+      margin-top: 24px;
+    }
+    .version-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+    /* ── Footer ──────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 24px;
+      text-align: center;
+    }
+    .footer-inner { max-width: 1000px; margin: 0 auto; }
+    .footer-text { font-size: 13px; color: var(--muted); }
+    .footer-text a { color: var(--teal-light); text-decoration: none; }
+    .footer-text a:hover { text-decoration: underline; }
+
+    /* ── Animations ──────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .stats { flex-direction: column; }
+      .stat { border-right: none; border-bottom: 1px solid var(--border); }
+      .stat:last-child { border-bottom: none; }
+      .hero { padding: 60px 0 60px; }
+      .cta-card { padding: 40px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <!-- ── Nav ──────────────────────────────────────────────── -->
+  <nav>
+    <div class="nav-inner">
+      <div class="nav-logo">🧮</div>
+      <span class="nav-title">Odoo <span>Pricing</span> Studio</span>
+      <span class="nav-badge">India Edition</span>
+    </div>
+  </nav>
+
+  <!-- ── Hero ─────────────────────────────────────────────── -->
+  <div class="wrap">
+    <section class="hero">
+      <div class="hero-eyebrow">
+        <span class="live-dot"></span>
+        Android App · Free Download
+      </div>
+
+      <h1 class="hero-title">
+        Odoo Pricing<br>
+        <span class="line2">in your pocket.</span>
+      </h1>
+
+      <p class="hero-sub">
+        Calculate multi-year licenses, compare plans, estimate implementation
+        costs and hit revenue targets — all offline, all native.
+      </p>
+
+      <div class="btn-group">
+        <a href="downloads/OdooPricingStudio-latest.apk" class="btn-primary" download>
+          <span class="btn-icon">📱</span>
+          Download APK
+        </a>
+        <a href="https://github.com/mars2025work/Pricing-Application/releases" 
+           class="btn-secondary" target="_blank" rel="noopener">
+          <span class="btn-icon">📦</span>
+          All Releases
+        </a>
+        <a href="https://github.com/mars2025work/Pricing-Application" 
+           class="btn-secondary" target="_blank" rel="noopener">
+          <span class="btn-icon">🐙</span>
+          View Source
+        </a>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-val">5</div>
+          <div class="stat-lbl">Calculators</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val">18%</div>
+          <div class="stat-lbl">GST Included</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val">0</div>
+          <div class="stat-lbl">Data Sent Online</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val">∞</div>
+          <div class="stat-lbl">Free Forever</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Features ──────────────────────────────────────── -->
+    <section class="section">
+      <h2 class="section-title">Everything you need to quote Odoo</h2>
+      <p class="section-sub">Five powerful calculators, one native app.</p>
+      <div class="features">
+        <div class="feature-card">
+          <span class="feature-icon">📋</span>
+          <div class="feature-title">Multi-Year License</div>
+          <div class="feature-desc">Calculate 1–5 year contracts with Standard & Custom plans. See contract savings vs non-contract pricing with visual breakdowns.</div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">⚖️</span>
+          <div class="feature-title">Yearly vs Monthly</div>
+          <div class="feature-desc">Side-by-side comparison of yearly and monthly billing. Instantly see how much the client saves by committing to annual.</div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">👔</span>
+          <div class="feature-title">HR Plans</div>
+          <div class="feature-desc">Price HR Standard and Custom modules. Auto-validates the 50-user minimum and shows full annual breakdowns with GST.</div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🛠️</span>
+          <div class="feature-title">Success Packs</div>
+          <div class="feature-desc">All 12 pack sizes (25h–300h) with partner discount selector. Compare all options in a single scrollable table.</div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🎯</span>
+          <div class="feature-title">Sales Analysis</div>
+          <div class="feature-desc">Set MRR & NRR targets and track progress in real-time. Full deal summary with license + implementation rolled up.</div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">📴</span>
+          <div class="feature-title">Fully Offline</div>
+          <div class="feature-desc">No internet required after install. All calculations happen on-device. Works perfectly in client meetings with no signal.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Install Steps ──────────────────────────────────── -->
+    <section class="section">
+      <h2 class="section-title">Install in 3 steps</h2>
+      <p class="section-sub">No app store needed. Direct APK install.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div>
+            <div class="step-title">Download the APK</div>
+            <div class="step-desc">Tap the "Download APK" button above. The file will save to your Downloads folder. It's about 30–50 MB.</div>
+            <span class="step-tag">~50 MB</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div>
+            <div class="step-title">Allow unknown sources</div>
+            <div class="step-desc">
+              On Android: <strong>Settings → Security → Install unknown apps</strong> → enable for your browser or Files app.
+              This is a one-time setting required for APKs outside the Play Store.
+            </div>
+            <span class="step-tag">One-time setting</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div>
+            <div class="step-title">Open and install</div>
+            <div class="step-desc">Tap the downloaded APK file from your notifications or Files app. Follow the install prompt. Done — the app opens immediately.</div>
+            <span class="step-tag">Android 8.0+</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ── CTA ───────────────────────────────────────────────── -->
+  <div class="wrap">
+    <section class="cta">
+      <div class="cta-card">
+        <h2 class="cta-title">Ready to quote faster?</h2>
+        <p class="cta-sub">Download the app and calculate any Odoo deal in seconds — even offline.</p>
+        <div class="btn-group">
+          <a href="downloads/OdooPricingStudio-latest.apk" class="btn-primary" download>
+            <span class="btn-icon">⬇️</span>
+            Download APK — Free
+          </a>
+          <a href="https://github.com/mars2025work/Pricing-Application" 
+             class="btn-secondary" target="_blank" rel="noopener">
+            🐙 Star on GitHub
+          </a>
+        </div>
+        <div class="version-tag">
+          <span class="version-dot"></span>
+          Latest build — auto-updated via GitHub Actions
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ── Footer ────────────────────────────────────────────── -->
+  <footer>
+    <div class="footer-inner">
+      <p class="footer-text">
+        Built for Odoo India Partners &nbsp;·&nbsp;
+        GST 18% &nbsp;·&nbsp;
+        <a href="https://github.com/mars2025work/Pricing-Application" target="_blank">GitHub</a>
+        &nbsp;·&nbsp;
+        Hosted on <a href="https://pages.cloudflare.com" target="_blank">Cloudflare Pages</a>
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    // Scroll reveal for feature cards
+    const observer = new IntersectionObserver(
+      (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+      { threshold: 0.12 }
+    );
+    document.querySelectorAll('.feature-card').forEach((el, i) => {
+      el.style.animationDelay = (i * 80) + 'ms';
+      observer.observe(el);
+    });
+  </script>
+</body>
+</html>
