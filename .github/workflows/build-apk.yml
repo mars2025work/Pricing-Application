@@ -15,12 +15,11 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      # ── 2. Node 18 ───────────────────────────────────────────────────────
-      - name: Set up Node.js 18
+      # ── 2. Node 20 ───────────────────────────────────────────────────────
+      - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: '20'
 
       # ── 3. Java 17 ───────────────────────────────────────────────────────
       - name: Set up JDK 17
@@ -35,7 +34,7 @@ jobs:
 
       # ── 5. Install JS dependencies ───────────────────────────────────────
       - name: Install npm dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps --no-audit --no-fund
 
       # ── 6. Download gradle-wrapper.jar ───────────────────────────────────
       - name: Download gradle-wrapper.jar
