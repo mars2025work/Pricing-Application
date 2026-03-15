@@ -38,29 +38,22 @@ jobs:
       - name: Install npm dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
 
-      # Download gradle-wrapper.jar using gradle itself (most reliable method)
-      - name: Setup Gradle Wrapper
+      # Use Gradle's OWN wrapper task to generate gradle-wrapper.jar
+      # This is the most reliable method - no external downloads needed
+      - name: Generate Gradle Wrapper
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.6'
+
+      - name: Create gradle-wrapper.jar using Gradle
         run: |
           mkdir -p android/gradle/wrapper
-          # Use gradle to generate its own wrapper jar - most reliable approach
-          cd android
-          # Install gradle CLI temporarily to generate wrapper
-          curl -s "https://get.sdkman.io" | bash 2>/dev/null || true
-          source "$HOME/.sdkman/bin/sdkman-init.sh" 2>/dev/null || true
-          # Direct download from Maven Central - most reliable source
-          GRADLE_VERSION="8.6"
-          JAR_URL="https://repo1.maven.org/maven2/org/gradle/gradle-wrapper/${GRADLE_VERSION}/gradle-wrapper-${GRADLE_VERSION}.jar"
-          curl -fsSL "$JAR_URL" -o gradle/wrapper/gradle-wrapper.jar 2>/dev/null || \
-          # Fallback 1: GitHub releases
-          curl -fsSL "https://github.com/gradle/gradle/raw/v${GRADLE_VERSION}.0/gradle/wrapper/gradle-wrapper.jar" \
-            -o gradle/wrapper/gradle-wrapper.jar 2>/dev/null || \
-          # Fallback 2: use gradle wrapper task with system gradle
-          (apt-get install -y gradle -q 2>/dev/null && gradle wrapper --gradle-version $GRADLE_VERSION --project-dir . 2>/dev/null) || \
-          # Fallback 3: download via wget from services.gradle.org zip
-          (wget -q "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" -O /tmp/gradle.zip && \
-           unzip -p /tmp/gradle.zip "gradle-${GRADLE_VERSION}/lib/plugins/gradle-wrapper-*.jar" > gradle/wrapper/gradle-wrapper.jar 2>/dev/null) || true
-          ls -la gradle/wrapper/
-          cd ..
+          gradle wrapper \
+            --gradle-version 8.6 \
+            --distribution-type bin \
+            --project-dir android
+          echo "✅ Wrapper files:"
+          ls -la android/gradle/wrapper/
 
       - name: Make gradlew executable
         run: chmod +x android/gradlew
