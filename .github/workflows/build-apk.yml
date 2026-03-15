@@ -32,31 +32,24 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install npm dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
 
-      # Use Gradle's OWN wrapper task to generate gradle-wrapper.jar
-      # This is the most reliable method - no external downloads needed
-      - name: Generate Gradle Wrapper
+      # Use the official Gradle wrapper action - handles jar automatically
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: '8.6'
+          gradle-version: '8.8'
 
-      - name: Create gradle-wrapper.jar using Gradle
+      # Generate wrapper jar using the installed gradle
+      - name: Generate Gradle Wrapper JAR
         run: |
-          mkdir -p android/gradle/wrapper
-          gradle wrapper \
-            --gradle-version 8.6 \
-            --distribution-type bin \
-            --project-dir android
-          echo "✅ Wrapper files:"
+          gradle wrapper --gradle-version 8.8 --project-dir android
           ls -la android/gradle/wrapper/
+          chmod +x android/gradlew
 
-      - name: Make gradlew executable
-        run: chmod +x android/gradlew
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
 
       - name: Generate debug keystore
         run: |
@@ -90,7 +83,7 @@ jobs:
       - name: Stage APK
         run: |
           APK=$(find android/app/build/outputs/apk/release -name "*.apk" | head -1)
-          echo "APK found: $APK"
+          echo "APK: $APK"
           cp "$APK" CalcPro-latest.apk
           mkdir -p web/downloads
           cp CalcPro-latest.apk web/downloads/OdooPricingStudio-latest.apk
